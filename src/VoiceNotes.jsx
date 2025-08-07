@@ -126,7 +126,7 @@ const DraggableGeneratedNote = ({ note, onDragStart }) => {
 
 const VoiceNotes = () => {
   const [transcript, setTranscript] = useState("");
-  const [note, setNote] = useState(" i have to cook food");
+  const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [notes, setNotes] = useState([]);
