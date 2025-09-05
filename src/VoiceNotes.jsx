@@ -178,6 +178,7 @@ useEffect(() => {
   };
 
    useEffect(() => {
+    console.log('notes from useEffect', notes);
     localStorage.setItem("notes", JSON.stringify(notes));
   }, [notes]);
 
