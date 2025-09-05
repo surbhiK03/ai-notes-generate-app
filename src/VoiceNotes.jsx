@@ -72,13 +72,11 @@ const VoiceNotes = () => {
     })
   );
 
-  // useEffect(() => {
-  //   const storedNotes = localStorage.getItem("notes-list");
-  //   if (storedNotes) {
-  //     setAllNotes(JSON.parse(storedNotes));
-  //   }
-  //   setNotesLoading(false);
-  // }, []);
+useEffect(() => {
+    const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+    console.log('notes from local', savedNotes);
+    // setNotes(savedNotes);
+  }, []);
 
   const startListening = () => {
     const SpeechRecognition =
@@ -167,9 +165,10 @@ const VoiceNotes = () => {
         }),
       };
 
-      console.log("Updated Data:", updatedData);
+      console.log("Updated Data:", updatedData,'generatedNote', generatedNote);
 
-      setNote(generatedNote);
+      // setNote(generatedNote);
+     setNotes((prevNotes) => [...prevNotes, generatedNote]);
     } catch (error) {
       console.error("Error:", error);
       setNote("Failed to fetch note.");
@@ -177,6 +176,10 @@ const VoiceNotes = () => {
       setLoading(false);
     }
   };
+
+   useEffect(() => {
+    localStorage.setItem("notes", JSON.stringify(notes));
+  }, [notes]);
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id);
