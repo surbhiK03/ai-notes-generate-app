@@ -236,7 +236,7 @@ useEffect(() => {
     setNotes(filtered);
   }, [selectedDate, allNotes]);
 
-console.log('setSelectedDate', selectedDate)
+// console.log('setSelectedDate', selectedDate)
   const handleDateChange = (date) => {
     setSelectedDate(date);
     console.log("Selected date:", date);
