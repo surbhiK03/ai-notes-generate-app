@@ -75,7 +75,7 @@ const VoiceNotes = () => {
 useEffect(() => {
     const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
     console.log('notes from local', savedNotes);
-    // setNotes(savedNotes);
+    setNotes(savedNotes);
   }, []);
 
   const startListening = () => {
@@ -146,7 +146,7 @@ useEffect(() => {
       console.log("data", data, "selectedDate", selectedDate);
       // const generatedNote = data.choices?.[0]?.message.content || "No response";
 
-      const generatedNote = data.choices?.[0]?.message.content || "No response";
+      const generatedNote = data.choices?.[0]?.message || "No response";
 
       // Update the data by adding date inside the message
       const updatedData = {
@@ -242,6 +242,11 @@ console.log('setSelectedDate', selectedDate)
     console.log("Selected date:", date);
   };
 
+   const formattedSelectedDate = new Date(selectedDate).toLocaleDateString("en-GB");
+
+  // Filter notes based on the selected date
+  const filteredNotes = notes.filter((note) => note.date === formattedSelectedDate);
+
   return (
     <div className="voice-notes-container">
       <DndContext
@@ -331,18 +336,18 @@ console.log('setSelectedDate', selectedDate)
                     <div className="loading-spinner"></div>
                     <p>Loading notes...</p>
                   </div>
-                ) : notes.length === 0 ? (
+                ) : filteredNotes.length === 0 ? (
                   <div className="empty-notes">
                     <div className="empty-icon">📝</div>
                     <p>No notes yet. Drag generated notes here to save them!</p>
                   </div>
                 ) : (
                   <SortableContext
-                    items={notes.map((note) => note.id)}
+                    items={filteredNotes.map((note) => note.id)}
                     strategy={verticalListSortingStrategy}
                   >
                     <div className="notes-list">
-                      {notes.map((note) => (
+                      {filteredNotes.map((note) => (
                         <SortableNoteItem
                           key={note.id}
                           id={note.id}
