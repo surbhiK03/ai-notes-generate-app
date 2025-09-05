@@ -18,8 +18,10 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import "./VoiceNotes.css";
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css'; // Import calendar styles
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css"; // Import calendar styles
+import SortableNoteItem from "./SortableNoteItem";
+import DraggableGeneratedNote from "./DraggableGeneratedNote";
 
 const apiKey = "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";
 
@@ -46,83 +48,9 @@ const NotesDropZone = ({ children, isOver }) => {
 };
 
 // Sortable Note Item Component
-const SortableNoteItem = ({ note, id }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="note-item"
-    >
-      <div className="note-content">
-        <p>{note.content}</p>
-        <div className="note-meta">
-          <span className="note-date">{note.date}</span>
-          <span className="note-time">{note.time}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
+// [{id: 1 ,content: 'testing content', time:'', date: ''}]
 // Draggable Generated Note Component
-const DraggableGeneratedNote = ({ note, onDragStart }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: "generated-note",
-    data: {
-      type: "generated-note",
-      content: note,
-    },
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="generated-note-draggable"
-    >
-      <div className="section-header">
-        <span className="section-icon">📝</span>
-        <h3>Generated Note</h3>
-        <span className="drag-hint">↕️ Drag to save</span>
-      </div>
-      <div className="note-content">
-        <p>{note}</p>
-      </div>
-    </div>
-  );
-};
 
 const VoiceNotes = () => {
   const [transcript, setTranscript] = useState("");
@@ -130,7 +58,7 @@ const VoiceNotes = () => {
   const [loading, setLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [notes, setNotes] = useState([]);
-  const [notesLoading, setNotesLoading] = useState(true);
+  const [notesLoading, setNotesLoading] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [isOverDropZone, setIsOverDropZone] = useState(false);
   const recognitionRef = useRef(null);
@@ -144,13 +72,13 @@ const VoiceNotes = () => {
     })
   );
 
-  useEffect(() => {
-    const storedNotes = localStorage.getItem("notes-list");
-    if (storedNotes) {
-      setAllNotes(JSON.parse(storedNotes));
-    }
-    setNotesLoading(false);
-  }, []);
+  // useEffect(() => {
+  //   const storedNotes = localStorage.getItem("notes-list");
+  //   if (storedNotes) {
+  //     setAllNotes(JSON.parse(storedNotes));
+  //   }
+  //   setNotesLoading(false);
+  // }, []);
 
   const startListening = () => {
     const SpeechRecognition =
@@ -217,8 +145,29 @@ const VoiceNotes = () => {
       });
 
       const data = await res.json();
-      console.log("data", data);
+      console.log("data", data, "selectedDate", selectedDate);
+      // const generatedNote = data.choices?.[0]?.message.content || "No response";
+
       const generatedNote = data.choices?.[0]?.message.content || "No response";
+
+      // Update the data by adding date inside the message
+      const updatedData = {
+        ...data,
+        choices: data.choices.map((choice, index) => {
+          if (index === 0) {
+            return {
+              ...choice,
+              message: {
+                ...choice.message,
+                date: selectedDate, // Add selected date here
+              },
+            };
+          }
+          return choice;
+        }),
+      };
+
+      console.log("Updated Data:", updatedData);
 
       setNote(generatedNote);
     } catch (error) {
@@ -270,18 +219,24 @@ const VoiceNotes = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("notes", notes);
-    if (notes.length > 0) {
-      localStorage.setItem("notes-list", JSON.stringify(notes));
-    }
-  }, [notes]);
+  // useEffect(() => {
+  //   console.log("notes", notes);
+  //   if (notes.length > 0) {
+  //     localStorage.setItem("notes-list", JSON.stringify(notes));
+  //   }
+  // }, [notes]);
 
- useEffect(() => {
-  const formattedDate = selectedDate.toLocaleDateString('en-GB'); // "dd/mm/yyyy"
-  const filtered = allNotes.filter(note => note.date === formattedDate);
-  setNotes(filtered);
-}, [selectedDate, allNotes]);
+  useEffect(() => {
+    const formattedDate = selectedDate.toLocaleDateString("en-GB"); // "dd/mm/yyyy"
+    const filtered = allNotes.filter((note) => note.date === formattedDate);
+    setNotes(filtered);
+  }, [selectedDate, allNotes]);
+
+console.log('setSelectedDate', selectedDate)
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    console.log("Selected date:", date);
+  };
 
   return (
     <div className="voice-notes-container">
@@ -362,7 +317,7 @@ const VoiceNotes = () => {
                 className="calendar-container"
                 style={{ marginBottom: "1rem" }}
               >
-                <Calendar onChange={setSelectedDate} value={selectedDate} />
+                <Calendar onChange={handleDateChange} value={selectedDate} />
               </div>
               <h2>Your Notes</h2>
 
