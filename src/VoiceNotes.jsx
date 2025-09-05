@@ -230,11 +230,11 @@ useEffect(() => {
   //   }
   // }, [notes]);
 
-  useEffect(() => {
-    const formattedDate = selectedDate.toLocaleDateString("en-GB"); // "dd/mm/yyyy"
-    const filtered = allNotes.filter((note) => note.date === formattedDate);
-    setNotes(filtered);
-  }, [selectedDate, allNotes]);
+  // useEffect(() => {
+  //   const formattedDate = selectedDate.toLocaleDateString("en-GB"); // "dd/mm/yyyy"
+  //   const filtered = allNotes.filter((note) => note.date === formattedDate);
+  //   setNotes(filtered);
+  // }, [selectedDate, allNotes]);
 
 // console.log('setSelectedDate', selectedDate)
   const handleDateChange = (date) => {
