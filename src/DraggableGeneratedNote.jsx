@@ -1,6 +1,7 @@
 import { useSortable } from "@dnd-kit/sortable";
-
-const DraggableGeneratedNote = ({ note, onDragStart }) => {
+import { CSS } from "@dnd-kit/utilities";
+ 
+const DraggableGeneratedNote = ({ id = "generated-note", note, onDragStart }) => {
   const {
     attributes,
     listeners,
@@ -9,19 +10,19 @@ const DraggableGeneratedNote = ({ note, onDragStart }) => {
     transition,
     isDragging,
   } = useSortable({
-    id: "generated-note",
+    id: id,
     data: {
       type: "generated-note",
       content: note,
     },
   });
-
+ 
   const style = {
-    transform: CSS.Transform?.toString(transform),
+    transform: transform ? CSS.Transform.toString(transform) : undefined,
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
-
+ 
   return (
     <div
       ref={setNodeRef}
@@ -41,5 +42,5 @@ const DraggableGeneratedNote = ({ note, onDragStart }) => {
     </div>
   );
 };
-
+ 
 export default DraggableGeneratedNote;
