@@ -15,13 +15,12 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import "./VoiceNotes.css";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css"; // Import calendar styles
 import SortableNoteItem from "./SortableNoteItem";
 import DraggableGeneratedNote from "./DraggableGeneratedNote";
+import ConfirmModal from "./ConfirmModal";
  
 const apiKey = "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";
  
@@ -130,8 +129,8 @@ useEffect(() => {
             {
               role: "system",
               content:
-                "You are an assistant that converts voice to short helpful notes.",
-            },
+              "You convert spoken text into VERY SHORT notes. Respond in 1–2 short lines only. No headings, no markdown, no explanations.",
+          },
             {
               role: "user",
               content: `Convert this spoken text into a note: ${text}`,
@@ -141,7 +140,6 @@ useEffect(() => {
       });
  
       const data = await res.json();
- 
       // Prefer message.content, fall back to message or a default string
       const generatedNoteText =
         data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.message ?? "No response";
@@ -220,6 +218,39 @@ useEffect(() => {
   // Filter notes based on the selected date
   const filteredNotes = notes.filter((note) => note.date === formattedSelectedDate);
  
+ const handleDeleteNote = (noteId) => {
+    // Compute new notes and persist immediately to localStorage to avoid relying solely on effects
+    setNotes((prevNotes) => {
+      const next = prevNotes.filter((note) => note.id !== noteId);
+      try {
+        localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(next));
+      } catch (err) {
+        console.error("Failed to persist notes after delete", err);
+      }
+      return next;
+    });
+  };
+ 
+  // --- Confirmation modal state & helpers ---
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
+ 
+  const handleRequestDelete = (noteId) => {
+    setPendingDeleteId(noteId);
+    setConfirmOpen(true);
+  };
+ 
+  const handleConfirmDelete = () => {
+    if (pendingDeleteId) handleDeleteNote(pendingDeleteId);
+    setPendingDeleteId(null);
+    setConfirmOpen(false);
+  };
+ 
+  const handleCancelDelete = () => {
+    setPendingDeleteId(null);
+    setConfirmOpen(false);
+  };
+ 
   return (
     <div className="voice-notes-container">
       <DndContext
@@ -229,9 +260,9 @@ useEffect(() => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="voice-notes-layout">
-          {/* Left Section - Recording */}
-          <div className="recording-section">
+      <div className="voice-notes-layout">
+        {/* Left Section - Recording */}
+        <div className="recording-section">
             <div className="voice-notes-card">
               <div className="header">
                 <div className="logo">
@@ -340,6 +371,7 @@ useEffect(() => {
                           key={note.id}
                           id={note.id}
                           note={note}
+                          onDelete={handleRequestDelete}
                         />
                       ))}
                     </div>
@@ -363,6 +395,13 @@ useEffect(() => {
             </div>
           ) : null}
         </DragOverlay>
+        <ConfirmModal
+          open={confirmOpen}
+          title="Delete note"
+          message="Are you sure you want to delete this note? This action cannot be undone."
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
       </DndContext>
     </div>
   );
